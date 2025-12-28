@@ -1,0 +1,57 @@
+alias: Notificare Meteo Detaliată ANM (iPhone + HTML5)
+description: Trimite Intervalul și Fenomenele corectând diacriticele.
+triggers:
+  - trigger: state
+    entity_id: sensor.mesaj_meteo_galati
+conditions:
+  - condition: state
+    entity_id: sensor.mesaj_meteo_galati
+    state: alerta
+  - condition: template
+    value_template: |-
+      {% if trigger.from_state is not none %}
+        {% set old_msg = trigger.from_state.attributes.mesaj_complet | default('') %}
+        {% set new_msg = trigger.to_state.attributes.mesaj_complet | default('') %}
+        {{ trigger.from_state.state != 'alerta' or old_msg != new_msg }}
+      {% else %} true {% endif %}
+actions:
+  - action: notify.mobile_app_iphone_16_pro
+    data:
+      title: >-
+        {% set text = state_attr('sensor.mesaj_meteo_galati', 'mesaj_complet') | lower | default('') %}
+        {% if 'rosu' in text or 'roșu' in text %} 🚨 COD ROȘU GALAȚI
+        {% elif 'portocaliu' in text %} 🟠 COD PORTOCALIU GALAȚI
+        {% elif 'galben' in text %} ⚠️ COD GALBEN GALAȚI
+        {% else %} ℹ️ Informare Meteo Galați {% endif %}
+      message: >-
+        {% set raw_text = state_attr('sensor.mesaj_meteo_galati', 'mesaj_complet') | default('') %}
+        {% set text = raw_text | replace('&icirc;', 'î') | replace('&Icirc;', 'Î') | replace('&acirc;', 'â') | replace('&Acirc;', 'Â') | replace('&#238;', 'î') %}
+        {% set split_interval = text.split('Interval de valabilitate:') %}
+        {% set interval = split_interval[1].split('Fenomene')[0] | trim if split_interval | length > 1 else "Vezi aplicația" %}
+        {% set split_fenomene = text.split('Fenomene') %}
+        {% if split_fenomene | length > 1 %}
+          {% set raw_fen = split_fenomene[1].split('Zone')[0] | replace('vizate:', '') | replace('și zone vizate:', '') | trim %}
+          {% set lista = raw_fen.split(',') %}
+          {% set ns = namespace(out='') %}
+          {% for item in lista %}{% set ns.out = ns.out + '\n- ' + item | trim %}{% endfor %}
+          {% set fenomene_final = ns.out %}
+        {% else %} {% set fenomene_final = " Vezi aplicația" %} {% endif %}
+        🕒 {{ interval }}
+        💨 Fenomene vizate:{{ fenomene_final }}
+      data:
+// AICI PUNEȚI URL-UL DASBOARDULUI PE CARE VREȚI SĂ-L AFIȘEZE LA CLICK SAU TAP
+        url: https://dashboard/
+        push:
+          sound:
+            name: >-
+              {% set text = state_attr('sensor.mesaj_meteo_galati', 'mesaj_complet') | lower | default('') %}
+              {{ 'critical' if 'rosu' in text or 'roșu' in text or 'portocaliu' in text else 'default' }}
+            volume: 1
+  - action: notify.html5
+    data:
+      title: "Cod Meteo Galați"
+      message: "Verifică detaliile pe dashboard."
+      data:
+        tag: alerta-meteo-galati
+	// AICI PUNEȚI URL-UL DASBOARDULUI PE CARE VREȚI SĂ-L AFIȘEZE LA CLICK SAU TAP
+        url: https://dashboard/
