@@ -1,4 +1,4 @@
-# Alert-ANM
+# Alerta-ANM-revizuita
 Completare senzori și automatizare la integrarea lui aurelmarius.
 Acest tutorial te va ajuta să configurezi un sistem complet de monitorizare a alertelor meteo în Home Assistant, optimizat pentru județul Galați dar adaptabil pentru orice județ. Vom integra datele oficiale ANM cu o filtrare locală și o afișare elegantă. Tutorialul se adresează celor cu un nivel mediu de cunoștințe despre Home Assistant, și se bazează pe integrarea Alertă ANM din GitHub, realizată de aurelmarius.
 
